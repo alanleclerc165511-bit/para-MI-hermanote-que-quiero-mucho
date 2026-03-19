@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>CALOS - Carrera 🏁</title>
+
+<style>
+body {
+  margin: 0;
+  overflow: hidden;
+  background: #000;
+  font-family: Arial;
+  color: white;
+}
+
+#game {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+}
+
+#track {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.line {
+  position: absolute;
+  width: 8px;
+  height: 60px;
+  background: white;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+#car {
+  position: absolute;
+  bottom: 120px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 42px;
+}
+
+#hud {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  font-size: 16px;
+}
+
+#message {
+  position: absolute;
+  top: 35%;
+  width: 100%;
+  text-align: center;
+  font-size: 22px;
+  padding: 20px;
+  opacity: 0;
+  transition: 0.5s;
+}
+
+.show {
+  opacity: 1 !important;
+}
+
+#btn {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  height: 120px;
+  background: rgba(255,255,255,0.08);
+  text-align: center;
+  line-height: 120px;
+  font-size: 18px;
+  border-top: 2px solid #ff2e63;
+}
+
+.final {
+  color: gold;
+  font-size: 26px;
+}
+</style>
+</head>
+
+<body>
+
+<div id="game">
+  <div id="track"></div>
+  <div id="car">🏎️</div>
+
+  <div id="hud">
+    Velocidad: <span id="speed">0</span> km/h<br>
+    Vueltas: <span id="laps">0</span>/5
+  </div>
+
+  <div id="message"></div>
+  <div id="btn">MANTÉN PARA ACELERAR</div>
+</div>
+
+<script>
+const speedText = document.getElementById("speed");
+const lapsText = document.getElementById("laps");
+const message = document.getElementById("message");
+const btn = document.getElementById("btn");
+const track = document.getElementById("track");
+
+let speed = 0;
+let maxSpeed = 240;
+let laps = 0;
+let progress = 0;
+let accelerating = false;
+let finished = false;
+
+let lines = [];
+
+// Crear líneas
+for (let i = 0; i < 10; i++) {
+  let line = document.createElement("div");
+  line.classList.add("line");
+  line.style.top = (i * 100) + "px";
+  track.appendChild(line);
+  lines.push(line);
+}
+
+// Eventos táctiles y mouse (sin bugs)
+function startAccel() { accelerating = true; }
+function stopAccel() { accelerating = false; }
+
+btn.addEventListener("touchstart", startAccel);
+btn.addEventListener("touchend", stopAccel);
+btn.addEventListener("touchcancel", stopAccel);
+
+btn.addEventListener("mousedown", startAccel);
+btn.addEventListener("mouseup", stopAccel);
+btn.addEventListener("mouseleave", stopAccel);
+
+function showMessage(text) {
+  message.innerText = text;
+  message.classList.add("show");
+  setTimeout(() => message.classList.remove("show"), 2000);
+}
+
+function gameLoop() {
+  if (finished) return;
+
+  // Física mejorada
+  if (accelerating) {
+    speed += 1.8;
+  } else {
+    speed -= 2.2;
+  }
+
+  speed = Math.max(0, Math.min(speed, maxSpeed));
+
+  // Movimiento de líneas (ahora depende de velocidad)
+  lines.forEach(line => {
+    let top = parseFloat(line.style.top);
+    top += speed * 0.15;
+
+    if (top > window.innerHeight) {
+      top = -60;
+    }
+
+    line.style.top = top + "px";
+  });
+
+  // Progreso
+  progress += speed * 0.02;
+
+  if (progress >= 100) {
+    progress = 0;
+    laps++;
+    lapsText.innerText = laps;
+
+    if (laps === 1) showMessage("Bien CALOS… empieza la carrera 🏁");
+    if (laps === 2) showMessage("Vas fuerte 🔥");
+    if (laps === 3) showMessage("Ya peleas el campeonato 😤");
+    if (laps === 4) showMessage("Última vuelta… TODO 💥");
+
+    if (laps === 5) finishGame();
+  }
+
+  speedText.innerText = Math.floor(speed);
+
+  requestAnimationFrame(gameLoop);
+}
+
+function finishGame() {
+  finished = true;
+
+  message.innerText =
+  "🏆 CALOS CAMPEÓN DEL MUNDO 🏆\n\n" +
+  "No solo ganaste… lo diste TODO.\n\n" +
+  "Yo siempre voy a estar contigo.\n\n" +
+  "Tú el piloto… yo tu ingeniero ❤️";
+
+  message.classList.add("show", "final");
+}
+
+gameLoop();
+</script>
+
+</body>
+</html>
